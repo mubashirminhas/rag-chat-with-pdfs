@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Multi-PDF RAG Chat</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body { font-family: Calibri, "Segoe UI", Arial, sans-serif; margin: 40px; background: #f9fafb; }
+        h2 { color: #1f2937; }
+        .chat-box { margin-top: 20px; }
+        .chat-item {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 15px 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        .chat-item.latest { background: #e0f2fe; border-left: 5px solid #0284c7; }
+        .chat-item.collapsed { height: 50px; overflow: hidden; cursor: pointer; }
+        .user, .assistant, .sources, .timestamp { margin: 5px 0; }
+        .timestamp { font-size: 12px; color: #6b7280; text-align: right; }
+        input[type="text"] { padding: 8px; font-size: 15px; }
+        button { padding: 8px 14px; font-size: 14px; cursor: pointer; }
+        .context-box { background: #f3f4f6; padding: 15px; border-radius: 8px; white-space: pre-wrap; font-size: 14px; }
+
+        /* Optional: hover effect for collapsed older messages */
+        .chat-item.collapsed:hover { background: #f1f5f9; }
+    </style>
+</head>
+<body>
+
+<h2>📄 Upload Documents</h2>
+<form action="/upload" method="post" enctype="multipart/form-data">
+    <input type="file" name="pdfs" multiple accept=".pdf">
+    <button type="submit">Upload PDFs</button>
+</form>
+
+<form action="/clear" method="post" style="margin-top:10px;">
+    <button type="submit">🧹 Clear Chat</button>
+</form>
+
+<hr>
+
+<h2>💬 Chat with Documents</h2>
+<form action="/ask" method="post">
+    <input type="text" name="question" placeholder="Ask a question..." required style="width:70%;">
+    <button type="submit">Ask</button>
+</form>
+
+{% if chat_history %}
+<hr>
+<h2>🗨️ Conversation (Latest on Top)</h2>
+<div class="chat-box">
+    {% for item in chat_history|reverse %}
+        <div class="chat-item {% if loop.first %}latest{% else %}collapsed{% endif %}">
+            <div class="user"><strong>You:</strong> {{ item.question }}</div>
+            <div class="assistant"><strong>Assistant:</strong> {{ item.answer }}</div>
+            {% if item.sources %}
+                <div class="sources"><strong>Sources:</strong> {{ item.sources }}</div>
+            {% endif %}
+            <div class="timestamp">{{ item.time }}</div>
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if context %}
+<hr>
+<h2>📚 Retrieved Context</h2>
+<div class="context-box">{{ context }}</div>
+{% endif %}
+
+<script>
+    // Toggle collapse for older messages
+    document.querySelectorAll('.chat-item.collapsed').forEach(item => {
+        item.addEventListener('click', () => {
+            item.classList.toggle('collapsed');
+        });
+    });
+</script>
+
+</body>
+</html>
